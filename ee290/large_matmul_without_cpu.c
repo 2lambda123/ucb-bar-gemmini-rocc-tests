@@ -1,10 +1,10 @@
 // See LICENSE for license details.
 
-#include <stdint.h>
-#include <stddef.h>
 #include <assert.h>
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #ifndef BAREMETAL
 #include <sys/mman.h>
 #endif
@@ -58,22 +58,24 @@ int main() {
   uint64_t cpu_start = read_cycles();
   full_matmul(full_A, full_B, gold_full);
   uint64_t cpu_end = read_cycles();
-  printf("Cycles taken by CPU: %llu\n", cpu_end-cpu_start);
+  printf("Cycles taken by CPU: %llu\n", cpu_end - cpu_start);
   full_matshift(gold_full, gold, 0);
 #endif
 
   printf("Starting gemmini matmul\n");
   uint64_t start = read_cycles();
 
-  tiled_matmul_auto(DIM_I, DIM_J, DIM_K,
-                    full_A, full_B, NULL, full_C,
-                    DIM_K, DIM_J, DIM_J, DIM_J, // striding factors
-                    MVIN_SCALE_IDENTITY, MVIN_SCALE_IDENTITY, MVIN_SCALE_IDENTITY, // mvin scaling factors
-                    NO_ACTIVATION, ACC_SCALE_IDENTITY, 0, false, // activation, scale, relu6_shift, repeating_bias
-                    false, false, // no transposing
-                    false, false, // elem_t C, full bias width (doesn't matter since no bias added)
-                    0,
-                    WS);
+  tiled_matmul_auto(
+      DIM_I, DIM_J, DIM_K, full_A, full_B, NULL, full_C, DIM_K, DIM_J, DIM_J,
+      DIM_J, // striding factors
+      MVIN_SCALE_IDENTITY, MVIN_SCALE_IDENTITY,
+      MVIN_SCALE_IDENTITY, // mvin scaling factors
+      NO_ACTIVATION, ACC_SCALE_IDENTITY, 0,
+      false,        // activation, scale, relu6_shift, repeating_bias
+      false, false, // no transposing
+      false,
+      false, // elem_t C, full bias width (doesn't matter since no bias added)
+      0, WS);
 
   /* To run with hardcoded tiling factors, you can use this function instead:
 
@@ -89,7 +91,7 @@ int main() {
   */
 
   uint64_t end = read_cycles();
-  printf("Cycles taken by Gemmini: %llu\n", end-start);
+  printf("Cycles taken by Gemmini: %llu\n", end - start);
 
 #if CHECK_RESULT == 1
   if (!full_is_equal(full_C, gold)) {

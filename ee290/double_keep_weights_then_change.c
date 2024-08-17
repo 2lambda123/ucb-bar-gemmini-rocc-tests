@@ -1,10 +1,10 @@
 // See LICENSE for license details.
 
-#include <stdint.h>
-#include <stddef.h>
 #include <assert.h>
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #ifndef BAREMETAL
 #include <sys/mman.h>
 #endif
@@ -15,10 +15,10 @@
 
 int main() {
 #ifndef BAREMETAL
-    if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-      perror("mlockall failed");
-      exit(1);
-    }
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
+    perror("mlockall failed");
+    exit(1);
+  }
 #endif
 
   // Flush Gemmini TLB of stale virtual addresses
@@ -26,20 +26,21 @@ int main() {
 
   // Initialize our input and output matrices in main memory
   elem_t A[N][DIM][DIM];
-  elem_t B[2][DIM][DIM]; // There are 2 weight matrices this time, even though N is 3
+  elem_t B[2][DIM]
+          [DIM]; // There are 2 weight matrices this time, even though N is 3
   elem_t C[N][DIM][DIM];
 
   // Initialize A and B
   for (size_t n = 0; n < N; n++)
     for (size_t i = 0; i < DIM; i++)
       for (size_t j = 0; j < DIM; j++) {
-        A[n][i][j] = (n+1)*10 + 2*(i*DIM + j);
+        A[n][i][j] = (n + 1) * 10 + 2 * (i * DIM + j);
       }
 
   for (size_t n = 0; n < 2; n++)
     for (size_t i = 0; i < DIM; i++)
       for (size_t j = 0; j < DIM; j++) {
-        B[n][i][j] = (n+1)*10 + 2*(i*DIM + j) + 1;
+        B[n][i][j] = (n + 1) * 10 + 2 * (i * DIM + j) + 1;
       }
 
   // Calculate both C matrices
@@ -62,17 +63,17 @@ int main() {
 
   // Move in A and B matrices from main memory to Gemmini's scratchpad
   const size_t A_sp_addr = 0;
-  const size_t B_sp_addr = N*DIM;
-  const size_t C_sp_addr = 2*N*DIM;
+  const size_t B_sp_addr = N * DIM;
+  const size_t C_sp_addr = 2 * N * DIM;
 
   gemmini_config_ld(DIM * sizeof(elem_t));
   gemmini_config_st(DIM * sizeof(elem_t));
 
   for (size_t n = 0; n < N; n++) {
-    gemmini_mvin(A[n], A_sp_addr + n*DIM);
+    gemmini_mvin(A[n], A_sp_addr + n * DIM);
   }
   for (size_t n = 0; n < 2; n++) {
-    gemmini_mvin(B[n], B_sp_addr + n*DIM);
+    gemmini_mvin(B[n], B_sp_addr + n * DIM);
   }
 
   // Multiply A matrices with B matrices in Gemmini;
@@ -87,13 +88,13 @@ int main() {
   gemmini_compute_accumulated(A_sp_addr + DIM, GARBAGE_ADDR);
 
   // Calculate A[2] * B[1] = C[2]
-  gemmini_preload(B_sp_addr + DIM, C_sp_addr + 2*DIM);
-  gemmini_compute_preloaded(A_sp_addr + 2*DIM, GARBAGE_ADDR);
+  gemmini_preload(B_sp_addr + DIM, C_sp_addr + 2 * DIM);
+  gemmini_compute_preloaded(A_sp_addr + 2 * DIM, GARBAGE_ADDR);
 
   // Move C matrices from Gemmini's scratchpad into main memory
   elem_t Out[N][DIM][DIM];
-  for (size_t n=0; n < N; n++) {
-    gemmini_mvout(Out[n], C_sp_addr + n*DIM);
+  for (size_t n = 0; n < N; n++) {
+    gemmini_mvout(Out[n], C_sp_addr + n * DIM);
   }
 
   // Fence till Gemmini completes all memory operations
