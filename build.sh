@@ -7,12 +7,12 @@ if [ ! -d "build" ] ; then
         cd ..
 
     if [ $? -ne 0 ] ; then
-        echo $0 failed
+        echo "$0" failed
         exit 1
     fi
 fi
 
-cd build
+cd build || exit
 
 if [[ $(which riscv64-unknown-linux-gnu-gcc) ]] ; then
     make -j $@
