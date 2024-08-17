@@ -15,7 +15,7 @@ fi
 cd build || exit
 
 if [[ $(which riscv64-unknown-linux-gnu-gcc) ]] ; then
-    make -j $@
+    make -j "$@"
 else
-    make -j BAREMETAL_ONLY=1 $@
+    make -j BAREMETAL_ONLY=1 "$@"
 fi
